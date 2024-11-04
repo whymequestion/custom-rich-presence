@@ -40,13 +40,8 @@ class LoginWindow(QWidget):
         layout.addWidget(self.clientid)
         layout.addWidget(self.btn_login)
         if not os.path.exists('clientid'):
-            self.show()
+            self.show() 
         else:
-            self.clientid.deleteLater()
-            self.heading.deleteLater()
-            self.subheading.deleteLater()
-            self.btn_login.deleteLater()
-            self.clientidlabel.deleteLater() 
             self.check_usid()
     def openlink(self):
         webbrowser.open(f'https://discord.com/developers/applications/{self.usid}/rich-presence/assets', new=2)
@@ -88,9 +83,12 @@ class LoginWindow(QWidget):
             presence.close()
             with open('clientid', 'wb') as f:
                 pickle.dump(self.usid, f)
-            
             self.close()
-
+            self.clientid.deleteLater()
+            self.heading.deleteLater()
+            self.subheading.deleteLater()
+            self.btn_login.deleteLater()
+            self.clientidlabel.deleteLater() 
             layout = self.layout()
             layout.setStretch(0, 1)
             global btn_one, btn_two, state, description, img, imgdesc
@@ -136,8 +134,18 @@ class LoginWindow(QWidget):
             btn_two = QPushButton('Change presence')
             btn_two.clicked.connect(self.change_presence)
             btn_two.setVisible(False)
-
-
+            try:
+                with open('load', 'rb') as f:
+                    previous = pickle.load(f)
+                state.setText(previous['state'])
+                description.setText(previous['descriprion'])
+                img.setText(previous['large_image'])
+                imgdesc.setText(previous['large_text'])
+                presencebuttononetext.setText(previous['buttons'][0]['label'])
+                presencebuttononelink.setText(previous['buttons'][0]['url'])
+                presencebuttontwotext.setText(previous['buttons'][1]['label'])
+                presencebuttontwolink.setText(previous['buttons'][1]['url'])
+            except: pass
             layout.addWidget(statelabel)
 
             layout.addWidget(state)
@@ -189,9 +197,16 @@ class LoginWindow(QWidget):
         btn_two.setVisible(True)
         QtCore.QCoreApplication.processEvents()
         presence.connect()
-        
+        previous = {
+            'state': state.text(),
+            'descriprion': description.text(),
+            'large_image':img.text(),
+            'large_text': imgdesc.text(),
+            'buttons': [{'label': presencebuttononetext.text(), 'url': presencebuttononelink.text()},{'label': presencebuttontwotext.text(), 'url': presencebuttontwolink.text()}]
+        }
+        with open('load', 'wb') as f:
+            pickle.dump(previous, f)
         if self.buttonnumber == 1:
-
             presence.update(state=state.text(), details=description.text(), large_image=img.text(), large_text=imgdesc.text(), buttons=[{'label': presencebuttononetext.text(), 'url': presencebuttononelink.text()}])
         elif self.buttonnumber == 2:
             presence.update(state=state.text(), details=description.text(), large_image=img.text(), large_text=imgdesc.text(), buttons=[{'label': presencebuttononetext.text(), 'url': presencebuttononelink.text()},{'label': presencebuttontwotext.text(), 'url': presencebuttontwolink.text()}])
